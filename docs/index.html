@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Popularity Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1DB954, #191414);
+            min-height: 100vh;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .panel h2 {
+            margin-bottom: 20px;
+            color: #1DB954;
+            font-size: 1.5rem;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #191414;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .song-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric h3 {
+            color: #1DB954;
+            margin-bottom: 5px;
+        }
+
+        .metric .value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #1DB954;
+        }
+
+        .slider-group input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #1DB954;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #1ed760;
+        }
+
+        .difference {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .difference.good {
+            background: rgba(29, 185, 84, 0.2);
+            color: #1DB954;
+        }
+
+        .difference.bad {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .custom-prediction {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(29, 185, 84, 0.2);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Spotify Popularity Predictor</h1>
+            <p>Compare actual song popularity with AI predictions and experiment with different audio features</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Song Comparison Panel -->
+            <div class="panel">
+                <h2>📊 Song Comparison</h2>
+                
+                <div class="song-selector">
+                    <select id="songSelect">
+                        <option value="">Loading songs...</option>
+                    </select>
+                    <button onclick="loadNewSongs()">🔄 Load New Songs</button>
+                </div>
+
+                <div id="songInfo" class="song-info" style="display: none;">
+                    <h3 id="songTitle"></h3>
+                    <p id="songDetails"></p>
+                </div>
+
+                <div class="comparison">
+                    <div class="metric">
+                        <h3>Actual Popularity</h3>
+                        <div class="value" id="actualPopularity">-</div>
+                    </div>
+                    <div class="metric">
+                        <h3>Predicted Popularity</h3>
+                        <div class="value" id="predictedPopularity">-</div>
+                    </div>
+                </div>
+
+                <div id="difference" class="difference" style="display: none;"></div>
+            </div>
+
+            <!-- Interactive Controls Panel -->
+            <div class="panel">
+                <h2>🎛️ Audio Feature Controls</h2>
+                
+                <div class="slider-group">
+                    <label for="year">Year</label>
+                    <input type="number" id="year" min="2000" max="2024" value="2023">
+                </div>
+
+                <div class="slider-group">
+                    <label for="genre">Genre</label>
+                    <select id="genre">
+                        <option value="pop">Pop</option>
+                    </select>
+                </div>
+
+                <div class="slider-group">
+                    <label for="danceability">Danceability: <span id="danceabilityValue">0.5</span></label>
+                    <input type="range" id="danceability" min="0" max="1" step="0.01" value="0.5">
+                </div>
+
+                <div class="slider-group">
+                    <label for="energy">Energy: <span id="energyValue">0.5</span></label>
+                    <input type="range" id="energy" min="0" max="1" step="0.01" value="0.5">
+                </div>
+
+                <div class="slider-group">
+                    <label for="valence">Valence: <span id="valenceValue">0.5</span></label>
+                    <input type="range" id="valence" min="0" max="1" step="0.01" value="0.5">
+                </div>
+
+                <div class="slider-group">
+                    <label for="acousticness">Acousticness: <span id="acousticnessValue">0.5</span></label>
+                    <input type="range" id="acousticness" min="0" max="1" step="0.01" value="0.5">
+                </div>
+
+                <div class="slider-group">
+                    <label for="loudness">Loudness: <span id="loudnessValue">-5</span></label>
+                    <input type="range" id="loudness" min="-30" max="5" step="0.1" value="-5">
+                </div>
+
+                <div class="slider-group">
+                    <label for="tempo">Tempo: <span id="tempoValue">120</span></label>
+                    <input type="range" id="tempo" min="60" max="200" step="1" value="120">
+                </div>
+
+                <div class="slider-group">
+                    <label for="duration">Duration (min): <span id="durationValue">3.5</span></label>
+                    <input type="range" id="duration" min="1" max="10" step="0.1" value="3.5">
+                </div>
+
+                <button onclick="predictCustom()">🎯 Predict Custom Song</button>
+                <div id="customPrediction" class="custom-prediction" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let modelData = null;
+        let currentSongs = [];
+        let currentSongIndex = 0;
+
+        // Sample model data (simplified for demo)
+        const sampleModelData = {
+            feature_importance: [0.15, 0.12, 0.11, 0.08, 0.10, 0.05, 0.06, 0.09, 0.04, 0.07, 0.13, 0.08, 0.06, 0.04, 0.02],
+            scaler_mean: [2015, 0.54, 0.64, 5.3, -9.0, 0.63, 0.09, 0.32, 0.25, 0.22, 0.46, 121, 3.5, 3.9, 5],
+            scaler_scale: [6.8, 0.18, 0.27, 3.6, 5.7, 0.48, 0.13, 0.35, 0.37, 0.20, 0.27, 30, 1.5, 0.47, 10],
+            genre_mapping: {"pop": 0, "rock": 1, "hip-hop": 2, "electronic": 3, "indie": 4, "country": 5, "r&b": 6, "jazz": 7, "classical": 8, "folk": 9},
+            feature_names: ['year', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_min', 'time_signature', 'genre_encoded'],
+            base_popularity: 50,
+            sample_songs: [
+                {"artist_name": "Taylor Swift", "track_name": "Anti-Hero", "popularity": 95, "genre": "pop", "year": 2022, "danceability": 0.63, "energy": 0.58, "key": 6, "loudness": -6.4, "mode": 1, "speechiness": 0.11, "acousticness": 0.33, "instrumentalness": 0.0, "liveness": 0.11, "valence": 0.33, "tempo": 97, "duration_min": 3.35, "time_signature": 4},
+                {"artist_name": "Harry Styles", "track_name": "As It Was", "popularity": 92, "genre": "pop", "year": 2022, "danceability": 0.73, "energy": 0.67, "key": 1, "loudness": -5.7, "mode": 1, "speechiness": 0.05, "acousticness": 0.11, "instrumentalness": 0.0, "liveness": 0.31, "valence": 0.68, "tempo": 173, "duration_min": 2.87, "time_signature": 4},
+                {"artist_name": "Bad Bunny", "track_name": "Me Porto Bonito", "popularity": 88, "genre": "hip-hop", "year": 2022, "danceability": 0.84, "energy": 0.65, "key": 11, "loudness": -4.9, "mode": 1, "speechiness": 0.24, "acousticness": 0.32, "instrumentalness": 0.0, "liveness": 0.11, "valence": 0.58, "tempo": 92, "duration_min": 2.58, "time_signature": 4},
+                {"artist_name": "Olivia Rodrigo", "track_name": "good 4 u", "popularity": 85, "genre": "pop", "year": 2021, "danceability": 0.56, "energy": 0.66, "key": 9, "loudness": -5.0, "mode": 1, "speechiness": 0.15, "acousticness": 0.33, "instrumentalness": 0.0, "liveness": 0.11, "valence": 0.56, "tempo": 166, "duration_min": 2.92, "time_signature": 4},
+                {"artist_name": "The Weeknd", "track_name": "Blinding Lights", "popularity": 90, "genre": "pop", "year": 2019, "danceability": 0.51, "energy": 0.73, "key": 1, "loudness": -5.9, "mode": 1, "speechiness": 0.06, "acousticness": 0.0014, "instrumentalness": 0.0, "liveness": 0.09, "valence": 0.33, "tempo": 171, "duration_min": 3.37, "time_signature": 4}
+            ]
+        };
+
+        // Initialize the app
+        async function initApp() {
+            try {
+                // Try to load model data from JSON file, fallback to sample data
+                try {
+                    const response = await fetch('model_data.json');
+                    modelData = await response.json();
+                } catch (error) {
+                    console.log('Using sample data');
+                    modelData = sampleModelData;
+                }
+                
+                loadGenres();
+                loadSongs();
+                setupEventListeners();
+                
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                document.getElementById('songSelect').innerHTML = '<option value="">Error loading data</option>';
+            }
+        }
+
+        function loadGenres() {
+            const genreSelect = document.getElementById('genre');
+            genreSelect.innerHTML = '';
+            
+            Object.keys(modelData.genre_mapping).forEach(genre => {
+                const option = document.createElement('option');
+                option.value = genre;
+                option.textContent = genre.charAt(0).toUpperCase() + genre.slice(1);
+                genreSelect.appendChild(option);
+            });
+        }
+
+        function loadSongs() {
+            currentSongs = shuffleArray([...modelData.sample_songs]).slice(0, 50);
+            
+            const songSelect = document.getElementById('songSelect');
+            songSelect.innerHTML = '<option value="">Select a song...</option>';
+            
+            currentSongs.forEach((song, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${song.artist_name} - ${song.track_name}`;
+                songSelect.appendChild(option);
+            });
+        }
+
+        function loadNewSongs() {
+            loadSongs();
+            document.getElementById('songInfo').style.display = 'none';
+            document.getElementById('actualPopularity').textContent = '-';
+            document.getElementById('predictedPopularity').textContent = '-';
+            document.getElementById('difference').style.display = 'none';
+        }
+
+        function setupEventListeners() {
+            // Song selection
+            document.getElementById('songSelect').addEventListener('change', function() {
+                if (this.value !== '') {
+                    selectSong(parseInt(this.value));
+                }
+            });
+
+            // Slider updates
+            const sliders = ['danceability', 'energy', 'valence', 'acousticness', 'loudness', 'tempo', 'duration'];
+            sliders.forEach(slider => {
+                const element = document.getElementById(slider);
+                element.addEventListener('input', function() {
+                    document.getElementById(slider + 'Value').textContent = this.value;
+                });
+            });
+        }
+
+        function selectSong(index) {
+            const song = currentSongs[index];
+            currentSongIndex = index;
+            
+            // Show song info
+            document.getElementById('songTitle').textContent = song.track_name;
+            document.getElementById('songDetails').textContent = `${song.artist_name} • ${song.genre} • ${song.year}`;
+            document.getElementById('songInfo').style.display = 'block';
+            
+            // Show actual popularity
+            document.getElementById('actualPopularity').textContent = song.popularity;
+            
+            // Predict and show predicted popularity
+            const prediction = predictPopularity(song);
+            document.getElementById('predictedPopularity').textContent = Math.round(prediction);
+            
+            // Show difference
+            const diff = Math.abs(song.popularity - prediction);
+            const diffEl = document.getElementById('difference');
+            diffEl.textContent = `Difference: ${diff.toFixed(1)} points`;
+            diffEl.className = 'difference ' + (diff < 15 ? 'good' : 'bad');
+            diffEl.style.display = 'block';
+        }
+
+        function predictPopularity(features) {
+            // Simplified prediction using feature importance weights
+            const featureValues = [
+                features.year || 2023,
+                features.danceability || 0.5,
+                features.energy || 0.5,
+                features.key || 5,
+                features.loudness || -5,
+                features.mode || 1,
+                features.speechiness || 0.05,
+                features.acousticness || 0.5,
+                features.instrumentalness || 0.1,
+                features.liveness || 0.15,
+                features.valence || 0.5,
+                features.tempo || 120,
+                features.duration_min || 3.5,
+                features.time_signature || 4,
+                modelData.genre_mapping[features.genre] || 0
+            ];
+
+            // Normalize features (simplified scaling)
+            const normalizedFeatures = featureValues.map((value, index) => {
+                return (value - modelData.scaler_mean[index]) / modelData.scaler_scale[index];
+            });
+
+            // Calculate weighted sum using feature importance
+            let prediction = modelData.base_popularity;
+            normalizedFeatures.forEach((value, index) => {
+                prediction += value * modelData.feature_importance[index] * 20; // Scale factor
+            });
+
+            // Clamp between 0 and 100
+            return Math.max(0, Math.min(100, prediction));
+        }
+
+        function predictCustom() {
+            const customFeatures = {
+                year: parseInt(document.getElementById('year').value),
+                genre: document.getElementById('genre').value,
+                danceability: parseFloat(document.getElementById('danceability').value),
+                energy: parseFloat(document.getElementById('energy').value),
+                valence: parseFloat(document.getElementById('valence').value),
+                acousticness: parseFloat(document.getElementById('acousticness').value),
+                loudness: parseFloat(document.getElementById('loudness').value),
+                tempo: parseFloat(document.getElementById('tempo').value),
+                duration_min: parseFloat(document.getElementById('duration').value),
+                key: 5,
+                mode: 1,
+                speechiness: 0.05,
+                instrumentalness: 0.1,
+                liveness: 0.15,
+                time_signature: 4
+            };
+
+            const prediction = predictPopularity(customFeatures);
+            
+            const predictionEl = document.getElementById('customPrediction');
+            predictionEl.textContent = `Predicted Popularity: ${Math.round(prediction)}`;
+            predictionEl.style.display = 'block';
+        }
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // Initialize the app when page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
