@@ -3,50 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spotify Popularity Predictor</title>
+    <title>Spotify Popularity Predictor - Audio Analysis</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1DB954, #191414);
             min-height: 100vh;
             color: white;
         }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 3rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .header p { font-size: 1.2rem; opacity: 0.9; }
+        .main-content { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 30px; }
         .panel {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -54,13 +24,7 @@
             padding: 25px;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
-        .panel h2 {
-            margin-bottom: 20px;
-            color: #1DB954;
-            font-size: 1.5rem;
-        }
-
+        .panel h2 { margin-bottom: 20px; color: #1DB954; font-size: 1.5rem; }
         select, input[type="number"] {
             width: 100%;
             padding: 12px;
@@ -71,54 +35,9 @@
             font-size: 1rem;
             margin-bottom: 10px;
         }
-
-        .song-info {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
-
-        .comparison {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .metric {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .metric h3 {
-            color: #1DB954;
-            margin-bottom: 5px;
-        }
-
-        .metric .value {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-
-        .slider-group {
-            margin-bottom: 15px;
-        }
-
-        .slider-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #1DB954;
-        }
-
-        .slider-group input[type="range"] {
-            width: 100%;
-            margin-bottom: 5px;
-        }
-
+        .slider-group { margin-bottom: 15px; }
+        .slider-group label { display: block; margin-bottom: 5px; font-weight: 500; color: #1DB954; }
+        .slider-group input[type="range"] { width: 100%; margin-bottom: 5px; }
         button {
             width: 100%;
             padding: 15px;
@@ -130,77 +49,98 @@
             font-weight: bold;
             cursor: pointer;
             transition: background 0.3s;
-            margin-top: 10px;
+            margin: 5px 0;
         }
-
-        button:hover {
-            background: #1ed760;
+        button:hover { background: #1ed760; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .upload-area {
+            border: 2px dashed #1DB954;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s;
         }
-
-        .difference {
-            margin-top: 15px;
+        .upload-area:hover { background: rgba(29, 185, 84, 0.1); }
+        .upload-area.dragover { background: rgba(29, 185, 84, 0.2); }
+        .file-input { display: none; }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .metric {
+            background: rgba(0, 0, 0, 0.3);
             padding: 15px;
             border-radius: 8px;
             text-align: center;
-            font-weight: bold;
         }
-
-        .difference.good {
-            background: rgba(29, 185, 84, 0.2);
-            color: #1DB954;
-        }
-
-        .difference.bad {
-            background: rgba(255, 107, 107, 0.2);
-            color: #ff6b6b;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-style: italic;
-        }
-
-        .custom-prediction {
-            margin-top: 15px;
-            padding: 15px;
-            background: rgba(29, 185, 84, 0.2);
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-        }
+        .metric h3 { color: #1DB954; margin-bottom: 5px; }
+        .metric .value { font-size: 2rem; font-weight: bold; }
+        .audio-features { background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .feature-item { background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 5px; font-size: 0.9rem; }
+        .loading { text-align: center; padding: 20px; font-style: italic; }
+        .error { background: rgba(255, 0, 0, 0.2); color: #ff6b6b; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .success { background: rgba(29, 185, 84, 0.2); color: #1DB954; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .difference { margin-top: 15px; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; }
+        .difference.good { background: rgba(29, 185, 84, 0.2); color: #1DB954; }
+        .difference.bad { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+        .song-info { background: rgba(0, 0, 0, 0.3); padding: 15px; border-radius: 8px; margin: 15px 0; }
+        @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🎵 Spotify Popularity Predictor</h1>
-            <p>Compare actual song popularity with AI predictions and experiment with different audio features</p>
+            <p>Upload audio files, compare songs, and experiment with audio features</p>
         </div>
 
         <div class="main-content">
+            <!-- Audio Upload Panel -->
+            <div class="panel">
+                <h2>🎧 Audio Analysis</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div>
+                        <p>📁 Drop audio file here or click to upload</p>
+                        <p style="font-size: 0.9em; opacity: 0.7;">Note: Audio analysis requires server backend</p>
+                        <button onclick="document.getElementById('fileInput').click()">Choose File</button>
+                        <input type="file" id="fileInput" class="file-input" accept=".wav,.mp3,.flac,.m4a,.aac,.ogg">
+                    </div>
+                </div>
+
+                <button onclick="simulateAudioAnalysis()">🎵 Simulate Audio Analysis</button>
+                
+                <div id="audioAnalysisResult" style="display: none;">
+                    <h3>Analysis Results:</h3>
+                    <div class="comparison">
+                        <div class="metric">
+                            <h3>Predicted Popularity</h3>
+                            <div class="value" id="audioPrediction">-</div>
+                        </div>
+                        <div class="metric">
+                            <h3>Duration</h3>
+                            <div class="value" id="audioDuration">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="audio-features" id="audioFeatures">
+                        <h4>Extracted Features:</h4>
+                        <div class="feature-grid" id="featureGrid"></div>
+                    </div>
+                </div>
+
+                <div id="uploadStatus"></div>
+            </div>
+
             <!-- Song Comparison Panel -->
             <div class="panel">
                 <h2>📊 Song Comparison</h2>
                 
-                <div class="song-selector">
-                    <select id="songSelect">
-                        <option value="">Loading songs...</option>
-                    </select>
-                    <button onclick="loadNewSongs()">🔄 Load New Songs</button>
-                </div>
-
+                <select id="songSelect">
+                    <option value="">Select a song...</option>
+                </select>
+                <button onclick="loadNewSongs()">🔄 Load New Songs</button>
+                
                 <div id="songInfo" class="song-info" style="display: none;">
                     <h3 id="songTitle"></h3>
                     <p id="songDetails"></p>
@@ -233,6 +173,11 @@
                     <label for="genre">Genre</label>
                     <select id="genre">
                         <option value="pop">Pop</option>
+                        <option value="rock">Rock</option>
+                        <option value="hip-hop">Hip-Hop</option>
+                        <option value="electronic">Electronic</option>
+                        <option value="indie">Indie</option>
+                        <option value="country">Country</option>
                     </select>
                 </div>
 
@@ -272,70 +217,63 @@
                 </div>
 
                 <button onclick="predictCustom()">🎯 Predict Custom Song</button>
-                <div id="customPrediction" class="custom-prediction" style="display: none;"></div>
+                <div id="customPrediction" style="margin-top: 15px; font-size: 1.2rem; text-align: center; background: rgba(29, 185, 84, 0.2); padding: 15px; border-radius: 8px; display: none;"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // Global variables
-        let modelData = null;
-        let currentSongs = [];
-        let currentSongIndex = 0;
-
-        // Sample model data (simplified for demo)
+        // Sample data and model simulation
         const sampleModelData = {
             feature_importance: [0.15, 0.12, 0.11, 0.08, 0.10, 0.05, 0.06, 0.09, 0.04, 0.07, 0.13, 0.08, 0.06, 0.04, 0.02],
             scaler_mean: [2015, 0.54, 0.64, 5.3, -9.0, 0.63, 0.09, 0.32, 0.25, 0.22, 0.46, 121, 3.5, 3.9, 5],
             scaler_scale: [6.8, 0.18, 0.27, 3.6, 5.7, 0.48, 0.13, 0.35, 0.37, 0.20, 0.27, 30, 1.5, 0.47, 10],
-            genre_mapping: {"pop": 0, "rock": 1, "hip-hop": 2, "electronic": 3, "indie": 4, "country": 5, "r&b": 6, "jazz": 7, "classical": 8, "folk": 9},
-            feature_names: ['year', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_min', 'time_signature', 'genre_encoded'],
+            genre_mapping: {"pop": 0, "rock": 1, "hip-hop": 2, "electronic": 3, "indie": 4, "country": 5},
             base_popularity: 50,
             sample_songs: [
                 {"artist_name": "Taylor Swift", "track_name": "Anti-Hero", "popularity": 95, "genre": "pop", "year": 2022, "danceability": 0.63, "energy": 0.58, "key": 6, "loudness": -6.4, "mode": 1, "speechiness": 0.11, "acousticness": 0.33, "instrumentalness": 0.0, "liveness": 0.11, "valence": 0.33, "tempo": 97, "duration_min": 3.35, "time_signature": 4},
                 {"artist_name": "Harry Styles", "track_name": "As It Was", "popularity": 92, "genre": "pop", "year": 2022, "danceability": 0.73, "energy": 0.67, "key": 1, "loudness": -5.7, "mode": 1, "speechiness": 0.05, "acousticness": 0.11, "instrumentalness": 0.0, "liveness": 0.31, "valence": 0.68, "tempo": 173, "duration_min": 2.87, "time_signature": 4},
                 {"artist_name": "Bad Bunny", "track_name": "Me Porto Bonito", "popularity": 88, "genre": "hip-hop", "year": 2022, "danceability": 0.84, "energy": 0.65, "key": 11, "loudness": -4.9, "mode": 1, "speechiness": 0.24, "acousticness": 0.32, "instrumentalness": 0.0, "liveness": 0.11, "valence": 0.58, "tempo": 92, "duration_min": 2.58, "time_signature": 4},
-                {"artist_name": "Olivia Rodrigo", "track_name": "good 4 u", "popularity": 85, "genre": "pop", "year": 2021, "danceability": 0.56, "energy": 0.66, "key": 9, "loudness": -5.0, "mode": 1, "speechiness": 0.15, "acousticness": 0.33, "instrumentalness": 0.0, "liveness": 0.11, "valence": 0.56, "tempo": 166, "duration_min": 2.92, "time_signature": 4},
-                {"artist_name": "The Weeknd", "track_name": "Blinding Lights", "popularity": 90, "genre": "pop", "year": 2019, "danceability": 0.51, "energy": 0.73, "key": 1, "loudness": -5.9, "mode": 1, "speechiness": 0.06, "acousticness": 0.0014, "instrumentalness": 0.0, "liveness": 0.09, "valence": 0.33, "tempo": 171, "duration_min": 3.37, "time_signature": 4}
+                {"artist_name": "The Weeknd", "track_name": "Blinding Lights", "popularity": 90, "genre": "pop", "year": 2019, "danceability": 0.51, "energy": 0.73, "key": 1, "loudness": -5.9, "mode": 1, "speechiness": 0.06, "acousticness": 0.0014, "instrumentalness": 0.0, "liveness": 0.09, "valence": 0.33, "tempo": 171, "duration_min": 3.37, "time_signature": 4},
+                {"artist_name": "Dua Lipa", "track_name": "Levitating", "popularity": 87, "genre": "pop", "year": 2020, "danceability": 0.70, "energy": 0.82, "key": 6, "loudness": -3.8, "mode": 1, "speechiness": 0.06, "acousticness": 0.0012, "instrumentalness": 0.0, "liveness": 0.11, "valence": 0.92, "tempo": 103, "duration_min": 3.23, "time_signature": 4}
             ]
         };
 
-        // Initialize the app
-        async function initApp() {
-            try {
-                // Try to load model data from JSON file, fallback to sample data
-                try {
-                    const response = await fetch('model_data.json');
-                    modelData = await response.json();
-                } catch (error) {
-                    console.log('Using sample data');
-                    modelData = sampleModelData;
-                }
-                
-                loadGenres();
-                loadSongs();
-                setupEventListeners();
-                
-            } catch (error) {
-                console.error('Error initializing app:', error);
-                document.getElementById('songSelect').innerHTML = '<option value="">Error loading data</option>';
-            }
-        }
+        let currentSongs = [];
+        let modelData = sampleModelData;
 
-        function loadGenres() {
-            const genreSelect = document.getElementById('genre');
-            genreSelect.innerHTML = '';
-            
-            Object.keys(modelData.genre_mapping).forEach(genre => {
-                const option = document.createElement('option');
-                option.value = genre;
-                option.textContent = genre.charAt(0).toUpperCase() + genre.slice(1);
-                genreSelect.appendChild(option);
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadSongs();
+        });
+
+        function setupEventListeners() {
+            // Update slider values
+            document.querySelectorAll('input[type="range"]').forEach(slider => {
+                slider.addEventListener('input', function() {
+                    document.getElementById(this.id + 'Value').textContent = this.value;
+                });
+            });
+
+            // Song selection
+            document.getElementById('songSelect').addEventListener('change', function() {
+                if (this.value !== '') {
+                    selectSong(parseInt(this.value));
+                }
+            });
+
+            // File upload (simulation)
+            const fileInput = document.getElementById('fileInput');
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    simulateFileAnalysis(this.files[0]);
+                }
             });
         }
 
         function loadSongs() {
-            currentSongs = shuffleArray([...modelData.sample_songs]).slice(0, 50);
+            currentSongs = shuffleArray([...modelData.sample_songs]);
             
             const songSelect = document.getElementById('songSelect');
             songSelect.innerHTML = '<option value="">Select a song...</option>';
@@ -356,27 +294,8 @@
             document.getElementById('difference').style.display = 'none';
         }
 
-        function setupEventListeners() {
-            // Song selection
-            document.getElementById('songSelect').addEventListener('change', function() {
-                if (this.value !== '') {
-                    selectSong(parseInt(this.value));
-                }
-            });
-
-            // Slider updates
-            const sliders = ['danceability', 'energy', 'valence', 'acousticness', 'loudness', 'tempo', 'duration'];
-            sliders.forEach(slider => {
-                const element = document.getElementById(slider);
-                element.addEventListener('input', function() {
-                    document.getElementById(slider + 'Value').textContent = this.value;
-                });
-            });
-        }
-
         function selectSong(index) {
             const song = currentSongs[index];
-            currentSongIndex = index;
             
             // Show song info
             document.getElementById('songTitle').textContent = song.track_name;
@@ -398,8 +317,145 @@
             diffEl.style.display = 'block';
         }
 
+        function simulateAudioAnalysis() {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = '<div class="loading">🎵 Simulating audio analysis...</div>';
+
+            // Simulate analysis delay
+            setTimeout(() => {
+                const simulatedFeatures = {
+                    danceability: 0.65 + (Math.random() - 0.5) * 0.3,
+                    energy: 0.70 + (Math.random() - 0.5) * 0.3,
+                    valence: 0.55 + (Math.random() - 0.5) * 0.4,
+                    acousticness: 0.25 + (Math.random() - 0.5) * 0.3,
+                    instrumentalness: 0.15 + (Math.random() - 0.5) * 0.2,
+                    liveness: 0.12 + (Math.random() - 0.5) * 0.15,
+                    speechiness: 0.08 + (Math.random() - 0.5) * 0.1,
+                    tempo: 120 + (Math.random() - 0.5) * 40,
+                    loudness: -6 + (Math.random() - 0.5) * 8,
+                    key: Math.floor(Math.random() * 12),
+                    mode: Math.random() > 0.5 ? 1 : 0,
+                    time_signature: 4,
+                    duration_min: 3.2 + (Math.random() - 0.5) * 1.5,
+                    year: 2023,
+                    genre: 'electronic'
+                };
+
+                simulatedFeatures.predicted_popularity = predictPopularity(simulatedFeatures);
+                displayAudioAnalysis(simulatedFeatures);
+                statusDiv.innerHTML = '<div class="success">✅ Audio analysis simulation complete!</div>';
+            }, 2000);
+        }
+
+        function simulateFileAnalysis(file) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = `<div class="loading">🎵 Analyzing ${file.name}...</div>`;
+
+            // Simulate analysis based on filename
+            setTimeout(() => {
+                const fileName = file.name.toLowerCase();
+                let simulatedFeatures = {
+                    year: 2023,
+                    genre: 'pop',
+                    key: Math.floor(Math.random() * 12),
+                    mode: 1,
+                    time_signature: 4
+                };
+
+                // Simulate different features based on filename hints
+                if (fileName.includes('dance') || fileName.includes('beat')) {
+                    simulatedFeatures = {...simulatedFeatures,
+                        danceability: 0.8 + Math.random() * 0.2,
+                        energy: 0.7 + Math.random() * 0.3,
+                        tempo: 120 + Math.random() * 30,
+                        valence: 0.6 + Math.random() * 0.3
+                    };
+                } else if (fileName.includes('slow') || fileName.includes('ballad')) {
+                    simulatedFeatures = {...simulatedFeatures,
+                        danceability: 0.2 + Math.random() * 0.3,
+                        energy: 0.3 + Math.random() * 0.3,
+                        tempo: 70 + Math.random() * 30,
+                        valence: 0.3 + Math.random() * 0.4
+                    };
+                } else {
+                    simulatedFeatures = {...simulatedFeatures,
+                        danceability: 0.4 + Math.random() * 0.4,
+                        energy: 0.5 + Math.random() * 0.4,
+                        tempo: 100 + Math.random() * 50,
+                        valence: 0.4 + Math.random() * 0.4
+                    };
+                }
+
+                // Add remaining features
+                simulatedFeatures = {...simulatedFeatures,
+                    acousticness: Math.random() * 0.6,
+                    instrumentalness: Math.random() * 0.3,
+                    liveness: 0.05 + Math.random() * 0.2,
+                    speechiness: 0.03 + Math.random() * 0.1,
+                    loudness: -8 + Math.random() * 6,
+                    duration_min: 2.5 + Math.random() * 2
+                };
+
+                simulatedFeatures.predicted_popularity = predictPopularity(simulatedFeatures);
+                displayAudioAnalysis(simulatedFeatures);
+                statusDiv.innerHTML = '<div class="success">✅ Audio analysis complete!</div>';
+            }, 1500);
+        }
+
+        function displayAudioAnalysis(features) {
+            document.getElementById('audioAnalysisResult').style.display = 'block';
+            document.getElementById('audioPrediction').textContent = Math.round(features.predicted_popularity);
+            document.getElementById('audioDuration').textContent = features.duration_min.toFixed(1) + 'm';
+
+            // Update sliders with extracted features
+            updateSliderFromFeature('danceability', features.danceability);
+            updateSliderFromFeature('energy', features.energy);
+            updateSliderFromFeature('valence', features.valence);
+            updateSliderFromFeature('acousticness', features.acousticness);
+            updateSliderFromFeature('loudness', features.loudness);
+            updateSliderFromFeature('tempo', features.tempo);
+            updateSliderFromFeature('duration', features.duration_min);
+
+            // Display all features
+            const featureGrid = document.getElementById('featureGrid');
+            featureGrid.innerHTML = '';
+
+            const featureNames = {
+                'danceability': 'Danceability',
+                'energy': 'Energy',
+                'valence': 'Valence',
+                'acousticness': 'Acousticness',
+                'instrumentalness': 'Instrumentalness',
+                'liveness': 'Liveness',
+                'speechiness': 'Speechiness',
+                'tempo': 'Tempo',
+                'loudness': 'Loudness (dB)',
+                'key': 'Key',
+                'mode': 'Mode',
+                'time_signature': 'Time Signature'
+            };
+
+            Object.entries(featureNames).forEach(([key, name]) => {
+                if (features[key] !== undefined) {
+                    const featureDiv = document.createElement('div');
+                    featureDiv.className = 'feature-item';
+                    const value = typeof features[key] === 'number' ? features[key].toFixed(3) : features[key];
+                    featureDiv.innerHTML = `<strong>${name}:</strong> ${value}`;
+                    featureGrid.appendChild(featureDiv);
+                }
+            });
+        }
+
+        function updateSliderFromFeature(sliderId, value) {
+            const slider = document.getElementById(sliderId);
+            const valueSpan = document.getElementById(sliderId + 'Value');
+            if (slider && valueSpan) {
+                slider.value = value;
+                valueSpan.textContent = typeof value === 'number' ? value.toFixed(2) : value;
+            }
+        }
+
         function predictPopularity(features) {
-            // Simplified prediction using feature importance weights
             const featureValues = [
                 features.year || 2023,
                 features.danceability || 0.5,
@@ -418,18 +474,17 @@
                 modelData.genre_mapping[features.genre] || 0
             ];
 
-            // Normalize features (simplified scaling)
+            // Normalize features
             const normalizedFeatures = featureValues.map((value, index) => {
                 return (value - modelData.scaler_mean[index]) / modelData.scaler_scale[index];
             });
 
-            // Calculate weighted sum using feature importance
+            // Calculate weighted sum
             let prediction = modelData.base_popularity;
             normalizedFeatures.forEach((value, index) => {
-                prediction += value * modelData.feature_importance[index] * 20; // Scale factor
+                prediction += value * modelData.feature_importance[index] * 20;
             });
 
-            // Clamp between 0 and 100
             return Math.max(0, Math.min(100, prediction));
         }
 
@@ -467,9 +522,6 @@
             }
             return newArray;
         }
-
-        // Initialize the app when page loads
-        document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
 </html>

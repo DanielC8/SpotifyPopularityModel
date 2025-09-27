@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spotify Popularity Predictor - Audio Analysis</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #191414; color: white; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #1DB954; font-size: 2.5rem; }
+        .panels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .panel { background: #282828; padding: 25px; border-radius: 10px; }
+        .panel h2 { color: #1DB954; margin-bottom: 20px; }
+        select, input { width: 100%; padding: 10px; margin: 5px 0; border: none; border-radius: 5px; }
+        .slider-group { margin: 15px 0; }
+        .slider-group label { display: block; margin-bottom: 5px; }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+        .metric { background: #1DB954; padding: 15px; border-radius: 8px; text-align: center; }
+        .metric h3 { margin: 0 0 10px 0; }
+        .metric .value { font-size: 2rem; font-weight: bold; }
+        button { background: #1DB954; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; margin: 5px 0; }
+        button:hover { background: #1ed760; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .difference { margin-top: 15px; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; }
+        .difference.good { background: rgba(29, 185, 84, 0.2); }
+        .difference.bad { background: rgba(255, 107, 107, 0.2); }
+        .upload-area { border: 2px dashed #1DB954; padding: 30px; text-align: center; border-radius: 10px; margin: 20px 0; }
+        .upload-area.dragover { background: rgba(29, 185, 84, 0.1); }
+        .file-input { display: none; }
+        .audio-features { background: #333; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .feature-item { background: #444; padding: 10px; border-radius: 5px; }
+        .loading { text-align: center; padding: 20px; }
+        .error { background: rgba(255, 0, 0, 0.2); color: #ff6b6b; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .success { background: rgba(29, 185, 84, 0.2); color: #1DB954; padding: 10px; border-radius: 5px; margin: 10px 0; }
+        @media (max-width: 1200px) { .panels { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Spotify Popularity Predictor</h1>
+            <p>Upload audio files, compare songs, and experiment with audio features</p>
+        </div>
+
+        <div class="panels">
+            <!-- Audio Upload Panel -->
+            <div class="panel">
+                <h2>🎧 Audio Analysis</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div>
+                        <p>📁 Drop audio file here or click to upload</p>
+                        <p style="font-size: 0.9em; opacity: 0.7;">Supported: WAV, MP3, FLAC, M4A, AAC, OGG</p>
+                        <button onclick="document.getElementById('fileInput').click()">Choose File</button>
+                        <input type="file" id="fileInput" class="file-input" accept=".wav,.mp3,.flac,.m4a,.aac,.ogg">
+                    </div>
+                </div>
+
+                <button onclick="analyzeDefault()" style="width: 100%;">🎵 Analyze Default Sample</button>
+                
+                <div id="audioAnalysisResult" style="display: none;">
+                    <h3>Analysis Results:</h3>
+                    <div class="comparison">
+                        <div class="metric">
+                            <h3>Predicted Popularity</h3>
+                            <div class="value" id="audioPrediction">-</div>
+                        </div>
+                        <div class="metric">
+                            <h3>Duration</h3>
+                            <div class="value" id="audioDuration">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="audio-features" id="audioFeatures">
+                        <h4>Extracted Features:</h4>
+                        <div class="feature-grid" id="featureGrid"></div>
+                    </div>
+                </div>
+
+                <div id="uploadStatus"></div>
+            </div>
+
+            <!-- Song Comparison Panel -->
+            <div class="panel">
+                <h2>📊 Song Comparison</h2>
+                
+                <select id="songSelect">
+                    <option value="">Loading songs...</option>
+                </select>
+                <button onclick="loadSongs()">Load New Songs</button>
+                
+                <div id="songInfo" style="display: none; margin: 20px 0; padding: 15px; background: #333; border-radius: 5px;">
+                    <h3 id="songTitle"></h3>
+                    <p id="songDetails"></p>
+                </div>
+
+                <div class="comparison">
+                    <div class="metric">
+                        <h3>Actual</h3>
+                        <div class="value" id="actualPop">-</div>
+                    </div>
+                    <div class="metric">
+                        <h3>Predicted</h3>
+                        <div class="value" id="predictedPop">-</div>
+                    </div>
+                </div>
+                <div id="difference" class="difference" style="display: none;"></div>
+            </div>
+
+            <!-- Interactive Controls Panel -->
+            <div class="panel">
+                <h2>🎛️ Audio Feature Controls</h2>
+                
+                <div class="slider-group">
+                    <label>Year: <input type="number" id="year" value="2023" min="2000" max="2024"></label>
+                </div>
+
+                <div class="slider-group">
+                    <label>Danceability: <span id="danceVal">0.5</span></label>
+                    <input type="range" id="danceability" min="0" max="1" step="0.01" value="0.5">
+                </div>
+
+                <div class="slider-group">
+                    <label>Energy: <span id="energyVal">0.5</span></label>
+                    <input type="range" id="energy" min="0" max="1" step="0.01" value="0.5">
+                </div>
+
+                <div class="slider-group">
+                    <label>Valence: <span id="valenceVal">0.5</span></label>
+                    <input type="range" id="valence" min="0" max="1" step="0.01" value="0.5">
+                </div>
+
+                <div class="slider-group">
+                    <label>Loudness: <span id="loudnessVal">-5</span></label>
+                    <input type="range" id="loudness" min="-30" max="5" step="0.1" value="-5">
+                </div>
+
+                <div class="slider-group">
+                    <label>Tempo: <span id="tempoVal">120</span></label>
+                    <input type="range" id="tempo" min="60" max="200" step="1" value="120">
+                </div>
+
+                <div class="slider-group">
+                    <label>Duration (min): <span id="durationVal">3.5</span></label>
+                    <input type="range" id="duration_min" min="1" max="10" step="0.1" value="3.5">
+                </div>
+
+                <button onclick="predictCustom()">Predict Custom Song</button>
+                <div id="customPrediction" style="margin-top: 15px; font-size: 1.2rem; text-align: center;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let songs = [];
+        let currentSong = null;
+
+        // Update slider values
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+            slider.addEventListener('input', function() {
+                document.getElementById(this.id + 'Val').textContent = this.value;
+            });
+        });
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        async function handleFileUpload(file) {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = '<div class="loading">🎵 Analyzing audio file...</div>';
+
+            const formData = new FormData();
+            formData.append('audio_file', file);
+
+            try {
+                const response = await fetch('/api/analyze_audio', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    displayAudioAnalysis(result);
+                    statusDiv.innerHTML = '<div class="success">✅ Audio analysis complete!</div>';
+                } else {
+                    statusDiv.innerHTML = `<div class="error">❌ ${result.error}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function analyzeDefault() {
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = '<div class="loading">🎵 Analyzing default sample...</div>';
+
+            try {
+                const response = await fetch('/api/analyze_default');
+                const result = await response.json();
+
+                if (response.ok) {
+                    displayAudioAnalysis(result);
+                    statusDiv.innerHTML = '<div class="success">✅ Default sample analysis complete!</div>';
+                } else {
+                    statusDiv.innerHTML = `<div class="error">❌ ${result.error}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function displayAudioAnalysis(features) {
+            document.getElementById('audioAnalysisResult').style.display = 'block';
+            document.getElementById('audioPrediction').textContent = Math.round(features.predicted_popularity);
+            document.getElementById('audioDuration').textContent = features.duration_min.toFixed(1) + 'm';
+
+            // Update sliders with extracted features
+            updateSliderFromFeature('danceability', features.danceability);
+            updateSliderFromFeature('energy', features.energy);
+            updateSliderFromFeature('valence', features.valence);
+            updateSliderFromFeature('loudness', features.loudness);
+            updateSliderFromFeature('tempo', features.tempo);
+            updateSliderFromFeature('duration_min', features.duration_min);
+
+            // Display all features
+            const featureGrid = document.getElementById('featureGrid');
+            featureGrid.innerHTML = '';
+
+            const featureNames = {
+                'danceability': 'Danceability',
+                'energy': 'Energy',
+                'valence': 'Valence',
+                'acousticness': 'Acousticness',
+                'instrumentalness': 'Instrumentalness',
+                'liveness': 'Liveness',
+                'speechiness': 'Speechiness',
+                'tempo': 'Tempo',
+                'loudness': 'Loudness (dB)',
+                'key': 'Key',
+                'mode': 'Mode',
+                'time_signature': 'Time Signature'
+            };
+
+            Object.entries(featureNames).forEach(([key, name]) => {
+                if (features[key] !== undefined) {
+                    const featureDiv = document.createElement('div');
+                    featureDiv.className = 'feature-item';
+                    const value = typeof features[key] === 'number' ? features[key].toFixed(3) : features[key];
+                    featureDiv.innerHTML = `<strong>${name}:</strong> ${value}`;
+                    featureGrid.appendChild(featureDiv);
+                }
+            });
+        }
+
+        function updateSliderFromFeature(sliderId, value) {
+            const slider = document.getElementById(sliderId);
+            const valueSpan = document.getElementById(sliderId + 'Val');
+            if (slider && valueSpan) {
+                slider.value = value;
+                valueSpan.textContent = value.toFixed(2);
+            }
+        }
+
+        // Rest of the existing JavaScript code...
+        async function loadSongs() {
+            try {
+                const response = await fetch('/api/songs');
+                songs = await response.json();
+                
+                const select = document.getElementById('songSelect');
+                select.innerHTML = '<option value="">Select a song...</option>';
+                
+                songs.forEach((song, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = `${song.artist_name} - ${song.track_name}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading songs:', error);
+            }
+        }
+
+        document.getElementById('songSelect').addEventListener('change', async function() {
+            if (this.value === '') return;
+            
+            currentSong = songs[this.value];
+            
+            document.getElementById('songTitle').textContent = currentSong.track_name;
+            document.getElementById('songDetails').textContent = `${currentSong.artist_name} • ${currentSong.genre}`;
+            document.getElementById('songInfo').style.display = 'block';
+            
+            document.getElementById('actualPop').textContent = currentSong.popularity;
+            
+            try {
+                const response = await fetch(`/api/song/${encodeURIComponent(currentSong.artist_name)}/${encodeURIComponent(currentSong.track_name)}`);
+                const songData = await response.json();
+                
+                const prediction = await predictSong(songData);
+                document.getElementById('predictedPop').textContent = Math.round(prediction);
+                
+                const diff = Math.abs(currentSong.popularity - prediction);
+                const diffEl = document.getElementById('difference');
+                diffEl.textContent = `Difference: ${diff.toFixed(1)} points`;
+                diffEl.className = 'difference ' + (diff < 10 ? 'good' : 'bad');
+                diffEl.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error predicting:', error);
+            }
+        });
+
+        async function predictSong(songData) {
+            const features = {
+                year: songData.year,
+                danceability: songData.danceability,
+                energy: songData.energy,
+                key: songData.key,
+                loudness: songData.loudness,
+                mode: songData.mode,
+                speechiness: songData.speechiness,
+                acousticness: songData.acousticness,
+                instrumentalness: songData.instrumentalness,
+                liveness: songData.liveness,
+                valence: songData.valence,
+                tempo: songData.tempo,
+                duration_min: songData.duration_min,
+                time_signature: songData.time_signature,
+                genre_encoded: songData.genre_encoded
+            };
+
+            const response = await fetch('/api/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(features)
+            });
+
+            const result = await response.json();
+            return result.prediction;
+        }
+
+        async function predictCustom() {
+            const features = {
+                year: parseInt(document.getElementById('year').value),
+                danceability: parseFloat(document.getElementById('danceability').value),
+                energy: parseFloat(document.getElementById('energy').value),
+                key: 5,
+                loudness: parseFloat(document.getElementById('loudness').value),
+                mode: 1,
+                speechiness: 0.05,
+                acousticness: 0.2,
+                instrumentalness: 0.1,
+                liveness: 0.15,
+                valence: parseFloat(document.getElementById('valence').value),
+                tempo: parseFloat(document.getElementById('tempo').value),
+                duration_min: parseFloat(document.getElementById('duration_min').value),
+                time_signature: 4,
+                genre_encoded: 0
+            };
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(features)
+                });
+
+                const result = await response.json();
+                document.getElementById('customPrediction').innerHTML = 
+                    `<strong>Predicted Popularity: ${Math.round(result.prediction)}</strong>`;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // Load songs on page load
+        loadSongs();
+    </script>
+</body>
+</html>
