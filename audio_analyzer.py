@@ -3,6 +3,8 @@ Audio Feature Extraction for Spotify-like Analysis
 Extracts audio features similar to Spotify's API from audio files
 """
 
+import os
+
 import librosa
 import numpy as np
 import soundfile as sf
@@ -76,7 +78,7 @@ class SpotifyAudioAnalyzer:
             chroma_mean = np.mean(chroma, axis=1)
             key = np.argmax(chroma_mean)
             return int(key)
-        except:
+        except Exception:
             return 5  # Default to F
     
     def _estimate_mode(self, y, sr):
@@ -93,7 +95,7 @@ class SpotifyAudioAnalyzer:
             minor_corr = np.corrcoef(chroma_mean, minor_profile)[0, 1]
             
             return 1 if major_corr > minor_corr else 0
-        except:
+        except Exception:
             return 1  # Default to major
     
     def _calculate_energy(self, y):
@@ -132,9 +134,9 @@ class SpotifyAudioAnalyzer:
             
             danceability = (beat_strength * 0.4 + tempo_factor * 0.3 + rhythm_regularity * 0.3)
             return float(np.clip(danceability, 0, 1))
-        except:
+        except Exception:
             return 0.5
-    
+
     def _calculate_valence(self, y, sr):
         """Calculate valence (musical positivity) using spectral features"""
         try:
@@ -151,9 +153,9 @@ class SpotifyAudioAnalyzer:
             
             valence = (brightness * 0.6 + (1 - harmony_complexity) * 0.4)
             return float(np.clip(valence, 0, 1))
-        except:
+        except Exception:
             return 0.5
-    
+
     def _calculate_acousticness(self, y, sr):
         """Calculate acousticness (likelihood of being acoustic)"""
         try:
@@ -168,9 +170,9 @@ class SpotifyAudioAnalyzer:
             # Lower rolloff and centroid often indicate more acoustic sound
             acousticness = 1 - (rolloff_mean * 0.5 + centroid_mean * 0.5)
             return float(np.clip(acousticness, 0, 1))
-        except:
+        except Exception:
             return 0.5
-    
+
     def _calculate_instrumentalness(self, y, sr):
         """Calculate instrumentalness (likelihood of no vocals)"""
         try:
@@ -186,9 +188,9 @@ class SpotifyAudioAnalyzer:
             # Higher instrumentalness if less vocal-like characteristics
             instrumentalness = 1 - abs(vocal_range_energy) * 0.1
             return float(np.clip(instrumentalness, 0, 1))
-        except:
+        except Exception:
             return 0.5
-    
+
     def _calculate_liveness(self, y, sr):
         """Calculate liveness (likelihood of live performance)"""
         try:
@@ -203,7 +205,7 @@ class SpotifyAudioAnalyzer:
             
             liveness = (bandwidth_var + dynamics_var) * 0.1
             return float(np.clip(liveness, 0, 1))
-        except:
+        except Exception:
             return 0.1
     
     def _calculate_speechiness(self, y, sr):
@@ -219,15 +221,13 @@ class SpotifyAudioAnalyzer:
             
             speechiness = speech_indicator * 0.1
             return float(np.clip(speechiness, 0, 1))
-        except:
+        except Exception:
             return 0.05
 
 def analyze_default_sample():
     """Analyze the default sample file"""
     analyzer = SpotifyAudioAnalyzer()
-    
-    # Check if default sample exists
-    import os
+
     if os.path.exists('skeletononthebeat.wav'):
         print("Analyzing default sample: skeletononthebeat.wav")
         features = analyzer.analyze_audio_file('skeletononthebeat.wav')

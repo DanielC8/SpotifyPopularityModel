@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import numpy as np
 import joblib
@@ -166,4 +166,4 @@ def get_song(artist, track):
     return jsonify({'error': 'Not found'}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)  # Different port to avoid conflicts
+    app.run(port=5001)
