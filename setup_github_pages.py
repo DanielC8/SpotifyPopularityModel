@@ -3,7 +3,7 @@ Setup script for GitHub Pages deployment with Audio Analysis
 """
 import os
 import shutil
-import json
+import subprocess
 
 def setup_github_pages():
     """Prepare files for GitHub Pages deployment with audio features"""
@@ -34,18 +34,18 @@ def setup_github_pages():
     # Try to export model data if possible
     try:
         if os.path.exists('export_model_data.py'):
-            print("📊 Exporting model data...")
-            exec(open('export_model_data.py').read())
+            print("Exporting model data...")
+            subprocess.run(['python', 'export_model_data.py'], check=True)
             if os.path.exists('model_data.json'):
                 shutil.copy('model_data.json', f'{docs_dir}/model_data.json')
-                print("✓ Copied model_data.json")
+                print("Copied model_data.json")
             else:
-                print("⚠️  model_data.json not found, using sample data in HTML")
+                print("model_data.json not found, using sample data in HTML")
         else:
-            print("⚠️  export_model_data.py not found, using sample data in HTML")
+            print("export_model_data.py not found, using sample data in HTML")
     except Exception as e:
-        print(f"⚠️  Could not export model data: {e}")
-        print("   Using sample data embedded in HTML")
+        print(f"Could not export model data: {e}")
+        print("Using sample data embedded in HTML")
     
     # Create enhanced README for the docs folder
     readme_content = """# 🎵 Spotify Popularity Predictor
