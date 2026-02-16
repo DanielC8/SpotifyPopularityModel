@@ -1,4 +1,4 @@
-# Spotify Popularity Predictor
+# [Spotify Popularity Predictor](https://danielc8.github.io/SpotifyPopularityModel/)
 
 This project predicts Spotify song popularity (0-100) based on audio features using a Random Forest Regressor trained on 1M+ tracks. It includes a Jupyter notebook for the full ML pipeline, a Flask server with audio file analysis, and a standalone client-side web interface deployed via GitHub Pages.
 
